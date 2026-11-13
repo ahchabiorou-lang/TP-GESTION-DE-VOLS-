@@ -1,0 +1,160 @@
+@startuml 02_diagramme_classes
+title Diagramme de classes - Gestion des vols et reservations
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+enum StatutReservation {
+  EN_ATTENTE
+  VALIDEE
+  ANNULEE
+}
+enum StatutPaiement {
+  PAYE
+  REMBOURSE_TOTAL
+  REMBOURSE_PARTIEL
+  NON_REMBOURSABLE
+}
+enum CanalReservation {
+  ACCUEIL
+  SITE_WEB
+}
+enum ModePaiement {
+  ESPECES
+  MOBILE_MONEY
+  CARTE_BANCAIRE
+}
+
+class Passager {
+  - id : int
+  - nom : string
+  - prenom : string
+  - telephone : string
+  - email : string
+  - numeroPiece : string
+  --
+  + Passager(id, nom, prenom, tel, email, piece)
+  + getId() : int
+  + getNom() : string
+  + getPrenom() : string
+  + getTelephone() : string
+  + getEmail() : string
+  + getNumeroPiece() : string
+  + nomComplet() : string
+  + ajouterReservation(r : Reservation*) : void
+  + aReservationActiveSur(vol : Vol*) : bool
+  + afficher() : void
+}
+
+class Vol {
+  - numero : string
+  - villeDepart : string
+  - destination : string
+  - dateDepart : time_t
+  - capacite : int
+  - prix : long
+  --
+  + Vol(numero, depart, destination, date, capacite, prix)
+  + getNumero() : string
+  + getDestination() : string
+  + getDateDepart() : time_t
+  + getCapacite() : int
+  + getPrix() : long
+  + placesOccupees() : int
+  + placesValidees() : int
+  + placesDisponibles() : int
+  + estComplet() : bool
+  + estPasse() : bool
+  + prochainSiegeLibre() : int
+  + heuresAvantDepart() : long
+  + ajouterReservation(r : Reservation*) : void
+  + afficher() : void
+}
+
+class Reservation {
+  - id : int
+  - canal : CanalReservation
+  - statut : StatutReservation
+  - dateCreation : time_t
+  - siege : int
+  --
+  + Reservation(id, p : Passager*, v : Vol*, canal)
+  + getId() : int
+  + getStatut() : StatutReservation
+  + getSiege() : int
+  + estActive() : bool
+  + estValidee() : bool
+  + estAnnulee() : bool
+  + valider(siege : int) : void
+  + annuler() : void
+  + setPaiement(p : Paiement*) : void
+  + afficher() : void
+  + afficherBillet() : void
+}
+
+class Paiement {
+  - id : int
+  - montant : long
+  - mode : ModePaiement
+  - date : time_t
+  - statut : StatutPaiement
+  - montantRembourse : long
+  --
+  + Paiement(id, r : Reservation*, montant, mode)
+  + getMontant() : long
+  + getStatut() : StatutPaiement
+  + getMontantRembourse() : long
+  + rembourser(tauxPourcent : int) : long
+  + afficher() : void
+}
+
+class Agence {
+  - nom : string
+  - prochainIdPassager : int
+  - prochainIdReservation : int
+  - prochainIdPaiement : int
+  --
+  + enregistrerPassager(...) : Passager*
+  + ajouterVol(...) : Vol*
+  + volsDisponibles() : vector<Vol*>
+  + rechercherParDestination(motif) : vector<Vol*>
+  + rechercherParDate(date) : vector<Vol*>
+  + creerReservation(idPassager, numVol, canal) : Reservation*
+  + enregistrerPaiement(idRes, montant, mode) : Paiement*
+  + annulerReservation(idRes) : Paiement*
+  + {static} tauxRemboursement(heures : long) : int
+  + statistiques() : Statistiques
+}
+
+class Menu {
+  + lancer() : void
+  - actionEnregistrerPassager() : void
+  - actionAjouterVol() : void
+  - menuReservations() : void
+  - actionEnregistrerPaiement() : void
+  - actionAnnulerReservation() : void
+}
+
+Agence *-- "0..*" Passager : possede >
+Agence *-- "0..*" Vol : possede >
+Agence *-- "0..*" Reservation : possede >
+Agence *-- "0..*" Paiement : possede >
+Menu --> "1" Agence : utilise >
+
+Passager "1" o-- "0..*" Reservation : effectue >
+Vol "1" o-- "0..*" Reservation : concerne <
+Reservation "1" -- "0..1" Paiement : est reglee par >
+
+Reservation ..> StatutReservation
+Reservation ..> CanalReservation
+Paiement ..> StatutPaiement
+Paiement ..> ModePaiement
+
+note bottom of Vol
+  Regle : placesOccupees() <= capacite
+  (reservations actives = EN_ATTENTE + VALIDEE)
+end note
+note bottom of Reservation
+  Une reservation = 1 passager + 1 vol.
+  Place definitive seulement si VALIDEE.
+end note
+@enduml
