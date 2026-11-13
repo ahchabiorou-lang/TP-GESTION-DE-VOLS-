@@ -1,0 +1,22 @@
+@startuml 04_diagramme_etats_reservation
+title Diagramme d'etats - Reservation et Paiement
+
+state "Cycle de vie d'une Reservation" as R {
+  [*] --> EN_ATTENTE : creerReservation()\n[passager inscrit, place libre,\npas de doublon]
+  EN_ATTENTE --> VALIDEE : enregistrerPaiement()\n[montant exact]
+  EN_ATTENTE --> ANNULEE : annulerReservation()
+  VALIDEE --> ANNULEE : annulerReservation()\n+ traitement du remboursement
+  ANNULEE --> [*]
+}
+note right of R
+  ANNULEE : plus aucun paiement possible.
+  Seule VALIDEE = place definitivement reservee.
+end note
+
+state "Statut de remboursement d'un Paiement" as P {
+  [*] --> PAYE : paiement enregistre
+  PAYE --> REMBOURSE_TOTAL : annulation >= 72 h avant le depart
+  PAYE --> REMBOURSE_PARTIEL : annulation entre 24 h et 72 h (50 %)
+  PAYE --> NON_REMBOURSABLE : annulation < 24 h (0 %)
+}
+@enduml
