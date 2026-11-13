@@ -1,0 +1,52 @@
+@startuml 03_diagramme_sequence_reservation
+title Diagramme de sequence - Reservation, paiement et annulation
+actor "Agent / Client" as U
+participant Menu
+participant Agence
+participant Passager
+participant Vol
+participant Reservation
+participant Paiement
+
+== Reservation ==
+U -> Menu : choisir "Reservation" (passager, vol, canal)
+Menu -> Agence : creerReservation(idPassager, numVol, canal)
+Agence -> Agence : trouverPassager() / trouverVol()
+alt passager inconnu, vol parti, doublon ou vol complet
+  Agence --> Menu : exception (message d'erreur)
+else conditions respectees
+  Agence -> Passager : aReservationActiveSur(vol)
+  Agence -> Vol : estComplet()
+  create Reservation
+  Agence -> Reservation : new Reservation(...)
+  Agence -> Vol : ajouterReservation(r)
+  Agence -> Passager : ajouterReservation(r)
+  Agence --> Menu : Reservation (EN_ATTENTE)
+end
+
+== Paiement et validation ==
+U -> Menu : enregistrer un paiement
+Menu -> Agence : enregistrerPaiement(idRes, montant, mode)
+alt reservation annulee / deja payee / montant incorrect
+  Agence --> Menu : exception
+else paiement accepte
+  create Paiement
+  Agence -> Paiement : new Paiement(...)
+  Agence -> Vol : prochainSiegeLibre()
+  Agence -> Reservation : valider(siege)
+  note right : place DEFINITIVE
+  Agence --> Menu : Paiement
+end
+
+== Annulation ==
+U -> Menu : annuler une reservation
+Menu -> Agence : annulerReservation(idRes)
+Agence -> Vol : heuresAvantDepart()
+Agence -> Agence : tauxRemboursement(heures)
+opt reservation payee
+  Agence -> Paiement : rembourser(taux)
+end
+Agence -> Reservation : annuler()
+note right : place liberee
+Agence --> Menu : Paiement (statut de remboursement)
+@enduml
