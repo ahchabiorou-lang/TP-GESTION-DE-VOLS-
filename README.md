@@ -2,7 +2,7 @@
 # ✈️ Gestion des vols et réservations — Agence de voyage de Cotonou
 
 > **Matière :** Programmation Orientée Objet (POO) — **Langage :** C++17 — **Modélisation :** UML (PlantUML)
-> **Auteur :** _[Votre nom et prénom]_ — **Filière / Classe :** _[à compléter]_ — **Année :** 2026
+> **Auteur :** _CHABI OROU Achéti Ashfaq_ — **Filière / Classe :** _MIA3_ — **Année :** 2026
 
 ---
 
